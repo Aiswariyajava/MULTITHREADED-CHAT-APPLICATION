@@ -54,5 +54,4 @@ Clients can type exit to disconnect gracefully.
 
 
 
-No file chosenNo file chosen
-ChatGPT can make mistakes. Check important info. See Cookie Preferences.
+
