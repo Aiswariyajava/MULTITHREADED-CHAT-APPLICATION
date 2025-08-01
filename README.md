@@ -50,7 +50,7 @@ Each client provides a name and can start chatting.
 
 Messages are sent to all connected clients instantly.
 
-Clients can type exit to disconnect gracefully
+Clients can type exit to disconnect gracefully.
 
 
 
