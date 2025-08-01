@@ -52,6 +52,8 @@ Messages are sent to all connected clients instantly.
 
 Clients can type exit to disconnect gracefully.
 
+OUTPUT:<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/2f7f3b3a-db40-475c-b1f9-576061aff4bd" />
+
 
 
 
