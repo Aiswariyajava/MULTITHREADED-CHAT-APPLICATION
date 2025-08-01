@@ -1,0 +1,141 @@
+//SERVER
+package chatapp;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Server {
+    private static final int PORT = 1234;
+    private static Set<ClientHandler> clientHandlers = new HashSet<>();
+
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server started. Waiting for clients...");
+
+            while (true) {
+                Socket socket = serverSocket.accept();
+                System.out.println("New client connected");
+
+                ClientHandler clientHandler = new ClientHandler(socket, clientHandlers);
+                clientHandlers.add(clientHandler);
+
+                Thread thread = new Thread(clientHandler);
+                thread.start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+//CLIENTHANDLER
+package chatapp;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class ClientHandler implements Runnable {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+    private Set<ClientHandler> clientHandlers;
+    private String clientName;
+
+    public ClientHandler(Socket socket, Set<ClientHandler> clientHandlers) {
+        this.socket = socket;
+        this.clientHandlers = clientHandlers;
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
+            out.println("Enter your name: ");
+            clientName = in.readLine();
+            broadcast("🔔 " + clientName + " joined the chat.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void run() {
+        String message;
+
+        try {
+            while ((message = in.readLine()) != null) {
+                if (message.equalsIgnoreCase("exit")) {
+                    break;
+                }
+                broadcast("[" + clientName + "]: " + message);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                broadcast("🚪 " + clientName + " left the chat.");
+                socket.close();
+                clientHandlers.remove(this);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void broadcast(String message) {
+        for (ClientHandler client : clientHandlers) {
+            client.out.println(message);
+        }
+    }
+}
+//CLIENT
+package chatapp;
+import java.io.*;
+import java.net.*;
+
+public class Client {
+    private static final String SERVER_IP = "localhost";
+    private static final int SERVER_PORT = 1234;
+
+    public static void main(String[] args) {
+        try (Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+             BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+
+            // Receive and send name
+            System.out.print(in.readLine());
+            out.println(consoleInput.readLine());
+
+            // Read messages from server
+            Thread readThread = new Thread(() -> {
+                String serverMessage;
+                try {
+                    while ((serverMessage = in.readLine()) != null) {
+                        System.out.println(serverMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Disconnected from server.");
+                }
+            });
+
+            readThread.start();
+
+            // Send user input to server
+            String userInput;
+            while ((userInput = consoleInput.readLine()) != null) {
+                out.println(userInput);
+                if (userInput.equalsIgnoreCase("exit")) {
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
